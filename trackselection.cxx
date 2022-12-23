@@ -43,6 +43,7 @@ struct TrackSelectionTask {
   Configurable<float> ptMax{"ptMax", 1e10f, "Upper cut on pt for the track selected"};
   Configurable<float> etaMin{"etaMin", -0.8, "Lower cut on eta for the track selected"};
   Configurable<float> etaMax{"etaMax", 0.8, "Upper cut on eta for the track selected"};
+  Configurable<bool> hybridTracksJE{"hybridTracks", false, "option to select hybrid tracks (run2 specific) for jets"};
 
   Produces<aod::TrackSelection> filterTable;
 
@@ -55,7 +56,8 @@ struct TrackSelectionTask {
       case 0:
         // Run 2 SPD kAny
         if (!isRun3) {
-          globalTracks = getGlobalTrackSelection();
+          if(!hybridTracksJE){globalTracks = getGlobalTrackSelection();}
+          else{globalTracks = getJEGlobalTrackSelectionRun2();}//get the global hybrid tracks according to ali pysics cuts
           break;
         }
       case 1:
@@ -74,12 +76,6 @@ struct TrackSelectionTask {
         // Run 3 kAll on all 7 layers of ITS
         if (isRun3) {
           globalTracks = getGlobalTrackSelectionRun3ITSMatch(TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSall7Layers);
-          break;
-        }
-        case 4:
-        // Get the global hybrid tracks for run2 in jet framework
-        if (!isRun3) {
-          globalTracks = getJEGlobalTrackSelectionRun2();
           break;
         }
       default:

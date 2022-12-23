@@ -89,7 +89,7 @@ TrackSelection getJEGlobalTrackSelectionRun2()
   selectedTracks.SetRequireITSRefit(true); 
   selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
   selectedTracks.SetMaxChi2PerClusterITS(36.f);
-  //selectedTracks.mMaxDcaXY(2.4f);  //this doesn't exist ... well it does ... mMaxDcaXY
+  selectedTracks.SetMaxDcaXY(2.4f);  //
   selectedTracks.SetMaxDcaZ(2.f);  // is 2 or 3.2 ?
 
   selectedTracks.SetPtRange(0.1f, 1e10f);
