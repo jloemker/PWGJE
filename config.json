@@ -63,6 +63,13 @@
         "processDataCharged": "true",
         "processDataFull": "false"
     },
+    "jetqa": {
+        "nBins": "200",
+        "nBinsPt": "200",
+        "nBinsEta": "200",
+        "nBinsPhi": "200",
+        "processJetQA": "true"
+    },
     "internal-dpl-aod-global-analysis-file-sink": "",
     "internal-dpl-aod-writer": ""
 }
