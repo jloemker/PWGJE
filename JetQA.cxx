@@ -56,9 +56,9 @@ struct jetqa{
     //using o2HistType = o2::framework::HistType;{HistType::kTH1F, {{nBins, -15., 15.}}}
     //control track qa
     mHistManager.add("controlTrackPt", "control track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("controlTrackPhi", "control track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("controlTrackPhi", "control track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("controlTrackEta", "control track constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-    //mHistJetManager.add("controlTrackVtxZ", "control track jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
+    mHistManager.add("controlCollisionVtxZ", "control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -20, 20}});
 
     //process jet qa
     mHistManager.add("jetPt", "inclusive jetPt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
@@ -67,45 +67,36 @@ struct jetqa{
     //mHistJetManager.add("jetVtxZ", "inclusive jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
 
     mHistManager.add("jetConstPt", "inclusive jet constituent Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("jetConstPhi", "inclusive jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("jetConstPhi", "inclusive jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("jetConstEta", "inclusive jet constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
     //mHistJetManager.add("jetConstVtxZ", "inclusive constituent jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
 
     mHistManager.add("leadJetConstPt", "leading jet constituent Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("leadJetConstPhi", "leading jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("leadJetConstPhi", "leading jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("leadJetConstEta", "leading jet constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
     //mHistJetManager.add("leadJetConstVtxZ", "leading constituent jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
 
     mHistManager.add("jetTrackPt", "track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("jetTrackPhi", "track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("jetTrackPhi", "track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("jetTrackEta", "track constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
     //mHistJetManager.add("jetTrackVtxZ", "track jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
 
     mHistManager.add("leadJetTrackPt", "leading track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("leadJetTrackPhi", "leading track #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("leadJetTrackPhi", "leading track #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("leadJetTrackEta", "leading track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
     //mHistJetManager.add("leadJetTrackVtxZ", "leading track jetVtxZ ; z [cm]", o2HistType::kTH1F, {{nBins, -20, 20}});
 
   }
   // processEventSelectionQA()
 
-  //group tracks according to collision - maybe add an event qa here too 
+  //loop over tracks per collision - maybe add an event qa here too 
   void processTrackQA(aod::Collision const& collision, aod::Tracks const& tracks)
   {//maybe already for collision and event qa ?
+    mHistManager.fill(HIST("controlCollisionVtxZ"), collision.posZ());
     for (auto& track : tracks) {
-
-      /* select tracks according to configurable selectedTracks
-      if(selectedTracks == 1 && !track.isGlobalTrack()) {
-        continue;
-      } else if (selectedTracks == 2 && !track.isGlobalTrackSDD()) {
-        continue;
-      } else if(selectedTracks == 3 && !track.getJEGlobalTrackSelectionRun2()){
-        continue;
-      }*/
       mHistManager.fill(HIST("controlTrackPt"), track.pt());
       mHistManager.fill(HIST("controlTrackPhi"), track.phi());
       mHistManager.fill(HIST("controlTrackEta"), track.eta());
-      //mHistJetManager.fill(HIST("controlTrackVtxZ"), track.posZ());
     }
   }
   PROCESS_SWITCH(jetqa, processTrackQA, "process selected track qa", true);
@@ -128,7 +119,7 @@ struct jetqa{
     mHistManager.fill(HIST("jetPt"), jet.pt());
     mHistManager.fill(HIST("jetPhi"), jet.phi());
     mHistManager.fill(HIST("jetEta"), jet.eta());
-    //mHistJetManager.fill(HIST("jetVtxZ"), jet.posZ());
+    //mHistJetManager.fill(HIST("jetVtxZ"), jet.collisionId().posZ());
     //fill jet constituent qa
     for(const auto& c : constituents) {
       LOGF(debug, "jet %d: track id %d, track pt %g", jet.index(), c.trackId(), c.track().pt());
