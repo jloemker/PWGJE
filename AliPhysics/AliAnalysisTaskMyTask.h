@@ -20,6 +20,8 @@ class AliAnalysisTaskMyTask : public AliAnalysisTaskSE
 
         virtual void            UserCreateOutputObjects();
         virtual void            UserExec(Option_t* option);
+        virtual void            Make(AliAODEvent* fAOD);
+        //virtual void            JetQA(..of jets..);
         virtual void            Terminate(Option_t* option);
 
     private:

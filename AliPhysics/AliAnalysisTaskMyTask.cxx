@@ -31,6 +31,8 @@
 #include "AliAODInputHandler.h"
 #include "AliAnalysisTaskMyTask.h"
 
+#include <AliEmcalJetTask.h>
+
 class AliAnalysisTaskMyTask;    // your analysis class
 
 using namespace std;            // std namespace: so you can do things like 'cout'
@@ -149,20 +151,9 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
                                         // so it needs to know what's in the output
 }
 //_____________________________________________________________________________
-void AliAnalysisTaskMyTask::UserExec(Option_t *)
+void AliAnalysisTaskMyTask::Make(AliAODEvent* fAOD)
 {   // http://alidoc.cern.ch/AliRoot/v5-09-24/class_ali_a_o_d_event.html (?)
     // user exec - this is for the eveqnt qa part from the O2 version - we need to add the jet task and then loop over the jets to get the other plots ?
-
-    // this function is called once for each event
-    // the manager will take care of reading the events from file, and with the static function InputEvent() you 
-    // have access to the current event. 
-    // once you return from the UserExec function, the manager will retrieve the next event from the chain
-    fAOD = dynamic_cast<AliAODEvent*>(InputEvent());    // get an event (called fAOD) from the input file
-                                                        // there's another event format (ESD) which works in a similar wya
-                                                        // but is more cpu/memory unfriendly. for now, we'll stick with aod's
-    if(!fAOD) return;                                   // if the pointer to the event is empty (getting it failed) skip this event
-        // example part: i'll show how to loop over the tracks in an event 
-        // and extract some information from them which we'll store in a histogram
 
     controlCollisionVtxZ->Fill(fAOD->GetVertex()->GetZ());
 
@@ -181,6 +172,32 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
                                                         // it to a file
+}
+
+void AliAnalysisTaskMyTask::UserExec(Option_t *) 
+{
+    // this function is called once for each event
+    // the manager will take care of reading the events from file, and with the static function InputEvent() you 
+    // have access to the current event. 
+    // once you return from the UserExec function, the manager will retrieve the next event from the chain
+    fAOD = dynamic_cast<AliAODEvent*>(InputEvent());    // get an event (called fAOD) from the input file
+                                                        // there's another event format (ESD) which works in a similar wya
+                                                        // but is more cpu/memory unfriendly. for now, we'll stick with aod's
+    if(!fAOD) return;                                   // if the pointer to the event is empty (getting it failed) skip this event
+
+	Make(fAOD);//here I have the collision vertex (I think !) and some track qa - needs proper selection
+
+    //I think i should run the jetfinder here - but the documentation made a comment about the user exec and run that is different for the jet framework..
+    //AliEmcalJetTask* jetFinderCh = AliEmcalJetTask("usedefault", "",  AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet)
+    Int_t iJets(fAOD->GetNJets());
+    for(Int_t i(0); i < iJets; i++){
+        AliAODJet* jet = static_cast<AliAODJet*>(fAOD->GetJet(i));
+        jetPt->Fill(jet->Pt());
+        jetPhi->Fill(jet->Phi());
+        jetEta->Fill(jet->Eta());
+
+    }
+
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::Terminate(Option_t *)
