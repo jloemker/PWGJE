@@ -17,6 +17,9 @@
  *
  * empty task which can serve as a starting point for building an analysis
  * as an example, one histogram is filled
+ *
+ * I try to get the same qa plots as in O2Physics - but I have no idea on how to handle the selections here :D
+ *
  */
 
 #include "TChain.h"
@@ -147,8 +150,9 @@ void AliAnalysisTaskMyTask::UserCreateOutputObjects()
 }
 //_____________________________________________________________________________
 void AliAnalysisTaskMyTask::UserExec(Option_t *)
-{
-    // user exec
+{   // http://alidoc.cern.ch/AliRoot/v5-09-24/class_ali_a_o_d_event.html (?)
+    // user exec - this is for the eveqnt qa part from the O2 version - we need to add the jet task and then loop over the jets to get the other plots ?
+
     // this function is called once for each event
     // the manager will take care of reading the events from file, and with the static function InputEvent() you 
     // have access to the current event. 
@@ -159,13 +163,20 @@ void AliAnalysisTaskMyTask::UserExec(Option_t *)
     if(!fAOD) return;                                   // if the pointer to the event is empty (getting it failed) skip this event
         // example part: i'll show how to loop over the tracks in an event 
         // and extract some information from them which we'll store in a histogram
+
+    controlCollisionVtxZ->Fill(fAOD->GetVertex()->GetZ());
+
     Int_t iTracks(fAOD->GetNumberOfTracks());           // see how many tracks there are in the event
     for(Int_t i(0); i < iTracks; i++) {                 // loop ove rall these tracks
         AliAODTrack* track = static_cast<AliAODTrack*>(fAOD->GetTrack(i));         // get a track (type AliAODTrack) from the event
         if(!track) continue;                            // if we failed, skip this track
-        if(!track->TestFilterBit(128)) continue;
+        if(!track->TestFilterBit(128)) continue; // ! have to find the correct selection !
 
         fHistPt->Fill(track->Pt());                     // plot the pt value of the track in a histogram
+        
+        controlTrackPt->Fill(track->Pt());
+        controlTrackPhi->Fill(track->Phi());
+        controlTrackEta->Fill(track->Eta());
     }                                                   // continue until all the tracks are processed
     PostData(1, fOutputList);                           // stream the results the analysis of this event to
                                                         // the output manager which will take care of writing
