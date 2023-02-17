@@ -15,8 +15,8 @@
 /// \since 20-10-2020
 ///
 
-#ifndef TrackSelectionDefaults_H
-#define TrackSelectionDefaults_H
+#ifndef COMMON_CORE_TRACKSELECTIONDEFAULTS_H_
+#define COMMON_CORE_TRACKSELECTIONDEFAULTS_H_
 
 #include "Framework/DataTypes.h"
 #include "Common/Core/TrackSelection.h"
@@ -52,6 +52,9 @@ TrackSelection getGlobalTrackSelectionRun3ITSMatch(int matching)
     case TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSibAny:
       selectedTracks.SetRequireHitsInITSLayers(1, {0, 1, 2});
       break;
+    case TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSibTwo:
+      selectedTracks.SetRequireHitsInITSLayers(2, {0, 1, 2});
+      break;
     case TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSallAny:
       selectedTracks.SetRequireHitsInITSLayers(1, {0, 1, 2, 3, 4, 5, 6});
       break;
@@ -76,6 +79,33 @@ TrackSelection getGlobalTrackSelectionSDD()
   return selectedTracks;
 }
 
+// Default track selection for nuclei analysis in run3 (STILL JUST A PLACEHOLDER)
+TrackSelection getGlobalTrackSelectionRun3Nuclei()
+{
+  return getGlobalTrackSelection();
+}
+
+// Default track selection for HF analysis (global tracks, with its points, but no tight selection for primary) in run3 (STILL JUST A PLACEHOLDER)
+TrackSelection getGlobalTrackSelectionRun3HF()
+{
+  TrackSelection selectedTracks;
+  selectedTracks.SetTrackType(o2::aod::track::TrackTypeEnum::Track); // Run 3 track asked by default
+  selectedTracks.SetPtRange(0.1f, 1e10f);
+  selectedTracks.SetEtaRange(-0.8f, 0.8f);
+  selectedTracks.SetRequireITSRefit(true);
+  selectedTracks.SetRequireTPCRefit(true);
+  selectedTracks.SetRequireGoldenChi2(true);
+  selectedTracks.SetMinNCrossedRowsTPC(70);
+  selectedTracks.SetMinNCrossedRowsOverFindableClustersTPC(0.8f);
+  selectedTracks.SetMaxChi2PerClusterTPC(4.f);
+  selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
+  selectedTracks.SetMaxChi2PerClusterITS(36.f);
+  // selectedTracks.SetMaxDcaXYPtDep([](float pt) { return 0.0105f + 0.0350f / pow(pt, 1.1f); });
+  selectedTracks.SetMaxDcaZ(2.f);
+  selectedTracks.SetMaxDcaXY(0.25);
+
+  return selectedTracks;
+}
 
 TrackSelection getJEGlobalTrackSelectionRun2()
 {
@@ -90,7 +120,7 @@ TrackSelection getJEGlobalTrackSelectionRun2()
   selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
   selectedTracks.SetMaxChi2PerClusterITS(36.f);
   selectedTracks.SetMaxDcaXY(2.4f);  //
-  selectedTracks.SetMaxDcaZ(2.f);  // is 2 or 3.2 ?
+  selectedTracks.SetMaxDcaZ(3.2f);  //
 
   selectedTracks.SetPtRange(0.1f, 1e10f);
   selectedTracks.SetEtaRange(-0.9f, 0.9f);  //extended pseudorapidity range to 0.9

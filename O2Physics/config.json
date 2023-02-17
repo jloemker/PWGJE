@@ -7,10 +7,16 @@
         "start-value-enumeration": "0",
         "end-value-enumeration": "-1",
         "step-value-enumeration": "1",
-        "aod-file": "AO2D.root"
+        "aod-file": "..\/data\/AO2D.root"
     },
     "internal-dpl-injected-dummy-sink": "",
     "internal-dpl-aod-spawner": "",
+    "collision-converter": {
+        "doNotSwap": "false",
+        "debug": "false",
+        "nbins": "1",
+        "tolerance": "0.00100000005"
+    },
     "internal-dpl-aod-index-builder": "",
     "timestamp-task": {
         "verbose": "false",
@@ -38,6 +44,7 @@
     },
     "track-selection": {
         "isRun3": "false",
+        "produceFBextendedTable": "false",
         "compatibilityIU": "false",
         "itsMatching": "0",
         "ptMin": "0.100000001",
@@ -68,6 +75,7 @@
         "nBinsPt": "200",
         "nBinsEta": "200",
         "nBinsPhi": "200",
+        "processTrackQA": "true",
         "processJetQA": "true"
     },
     "internal-dpl-aod-global-analysis-file-sink": "",
