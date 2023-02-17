@@ -167,8 +167,6 @@ struct jetqa{
 };
 
 //add second struct that handles tracks and jets collision wise with event selection and jet flter:
-/*
-
 struct jetCollisionQa{
 
   HistogramRegistry mHistManager{"JetCollisionQAHistograms"};//from signal selection
@@ -195,15 +193,15 @@ struct jetCollisionQa{
 
   }
 
-  void process(soa::Join<aod::Collisions, aod::EvSels, aod::FullJetFilters>::iterator const& collision, aod::Jets const& jets, aod::Tracks const& tracks)
+  void process(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, aod::Jets const& jets, aod::Tracks const& tracks)
   {
     if(collision.posZ() > 10){return;}//maybe we can set this in the EvSel per .json
-    mHistJetManager.fill(HIST("collisionVtxZ"), collision.posZ());
+    mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
     //first fill all jet QA hists per jet
-    for(const auto& jet : jets){
-      mHistManager.fill(HIST("jetPt"), jet.pt());
-      mHistManager.fill(HIST("jetPhi"), jet.phi());
-      mHistManager.fill(HIST("jetEta"), jet.eta());
+    for(const auto& j: jets){
+      mHistManager.fill(HIST("jetPt"), j.pt());
+      mHistManager.fill(HIST("jetPhi"), j.phi());
+      mHistManager.fill(HIST("jetEta"), j.eta());
       //mHistJetManager.fill(HIST("jetVtxZ"), jet.collisionId().posZ());
     }
 
@@ -218,12 +216,10 @@ struct jetCollisionQa{
 
 };
 
-*/
-
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
   return WorkflowSpec{
-    adaptAnalysisTask<jetqa>(cfgc)
-    //adaptAnalysisTask<jetCollisionQa>(cfgc)
+    adaptAnalysisTask<jetqa>(cfgc),
+    adaptAnalysisTask<jetCollisionQa>(cfgc)
     };
 }

@@ -70,6 +70,12 @@
         "processDataCharged": "true",
         "processDataFull": "false"
     },
+    "jet-collision-qa": {
+        "nBins": "200",
+        "nBinsPt": "200",
+        "nBinsEta": "200",
+        "nBinsPhi": "200"
+    },
     "jetqa": {
         "nBins": "200",
         "nBinsPt": "200",
