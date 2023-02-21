@@ -40,7 +40,7 @@ using namespace o2::framework::expressions;
 
 using selectedTracks = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection>;
 
-struct jetqa{
+struct jetTrackQa{
 
   HistogramRegistry mHistManager{"JetQAHistograms"};//from signal selection
   Configurable<int> nBins{"nBins", 200, "N bins in histos"};
@@ -100,7 +100,7 @@ struct jetqa{
       mHistManager.fill(HIST("controlTrackEta"), track.eta());
     }
   }
-  PROCESS_SWITCH(jetqa, processTrackQA, "process selected track qa", true);
+  PROCESS_SWITCH(jetTrackQa, processTrackQA, "process selected track qa", true);
   
 
   //double leadJetPt = -1; for leading jet I would need to loop over the collisions - for now only leading track/constituent per jet
@@ -162,12 +162,12 @@ struct jetqa{
     mHistManager.fill(HIST("leadJetTrackEta"), leadingTrackEta);
     //mHistJetManager.fill(HIST("leadJetTrackVtxZ"), leadingJetTrackVtxZ);
   }//end processJetQA
-  PROCESS_SWITCH(jetqa, processJetQA, "process jets from jet-finder output", true);
+  PROCESS_SWITCH(jetTrackQa, processJetQA, "process jets from jet-finder output", true);
 
 };
 
 //add second struct that handles tracks and jets collision wise with event selection and jet flter:
-struct jetCollisionQa{
+struct jetTrackCollisionQa{
 
   HistogramRegistry mHistManager{"JetCollisionQAHistograms"};//from signal selection
   Configurable<int> nBins{"nBins", 200, "N bins in histos"};
@@ -193,7 +193,7 @@ struct jetCollisionQa{
 
   }
 
-  void process(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, aod::Jets const& jets, aod::Tracks const& tracks)
+  void process(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, aod::Jets const& jets, aod::JetTrackConstituents const& constituents, aod::Tracks const& tracks)
   {
     if(collision.posZ() > 10){return;}//maybe we can set this in the EvSel per .json
     mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
@@ -219,7 +219,7 @@ struct jetCollisionQa{
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
   return WorkflowSpec{
-    adaptAnalysisTask<jetqa>(cfgc),
-    adaptAnalysisTask<jetCollisionQa>(cfgc)
+    adaptAnalysisTask<jetTrackQa>(cfgc),
+    adaptAnalysisTask<jetTrackCollisionQa>(cfgc)
     };
 }
