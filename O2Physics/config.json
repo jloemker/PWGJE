@@ -29,11 +29,7 @@
         "processRun2": "true",
         "processRun3": "false"
     },
-    "track-extension": {
-        "compatibilityIU": "false",
-        "processRun2": "true",
-        "processRun3": "false"
-    },
+    "track-extension": "",
     "event-selection-task": {
         "syst": "PbPb",
         "muonSelection": "0",
@@ -59,7 +55,7 @@
         "trackEtaCut": "0.899999976",
         "DoRhoAreaSub": "false",
         "DoConstSub": "false",
-        "jetPtMin": "10",
+        "jetPtMin": "0.15",
         "jetR": {
             "values": [
                 "0.40000000000000002"
