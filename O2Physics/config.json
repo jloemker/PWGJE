@@ -31,7 +31,7 @@
     },
     "track-extension": "",
     "event-selection-task": {
-        "syst": "PbPb",
+        "syst": "pp",
         "muonSelection": "0",
         "customDeltaBC": "300",
         "isMC": "false",
@@ -43,10 +43,10 @@
         "produceFBextendedTable": "false",
         "compatibilityIU": "false",
         "itsMatching": "0",
-        "ptMin": "0.100000001",
+        "ptMin": "0.15",
         "ptMax": "1e+10",
-        "etaMin": "-0.800000012",
-        "etaMax": "0.800000012",
+        "etaMin": "-0.9000000",
+        "etaMax": "0.9000000",
         "hybridTracks": "true"
     },
     "jet-finder-data": {
