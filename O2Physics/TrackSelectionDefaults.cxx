@@ -114,18 +114,15 @@ TrackSelection getJEGlobalTrackSelectionRun2()
   selectedTracks.SetMinNCrossedRowsTPC(70);
   selectedTracks.SetMinNCrossedRowsOverFindableClustersTPC(0.8f);
   selectedTracks.SetMaxChi2PerClusterTPC(4.f);
-  //how to implement rejection of kink daughters ????
   selectedTracks.SetRequireTPCRefit(true);
   selectedTracks.SetRequireITSRefit(true); 
   selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
   selectedTracks.SetMaxChi2PerClusterITS(36.f);
-  selectedTracks.SetMaxDcaXY(2.4f);  //
-  selectedTracks.SetMaxDcaZ(3.2f);  //
-
   selectedTracks.SetPtRange(0.1f, 1e10f);
-  selectedTracks.SetEtaRange(-0.9f, 0.9f);  //extended pseudorapidity range to 0.9
-  // selectedTracks.SetRequireGoldenChi2(true);  // is this needed?
- 
+  selectedTracks.SetEtaRange(-0.9f, 0.9f);
+  selectedTracks.SetMaxDcaXY(2.4f);  
+  selectedTracks.SetMaxDcaZ(3.2f);  
+
   return selectedTracks;
 }
 
