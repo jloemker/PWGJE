@@ -32,7 +32,7 @@ using namespace o2::framework;
 using namespace o2::framework::expressions;
 
 using selectedTracks = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection>;
-
+/*
 struct jetTrackQa{
 
   HistogramRegistry mHistManager{"JetQAHistograms"};
@@ -98,7 +98,7 @@ struct jetTrackQa{
 
   //loops over jet table - jets have constituents - constituents have tracks -> now the selected tracks ?
   // for vertex cut we need at least EvSel .. ?
-  void processJetQA(aod::Jet const& jet, aod::JetTrackConstituents const& constituents, aod::Tracks const& tracks)
+  void processJetQA(aod::Jet const& jet, aod::JetConstituents const& constituents, aod::Tracks const& tracks)
   {//first fill all jet QA hists per jet
     mHistManager.fill(HIST("jetPt"), jet.pt());
     mHistManager.fill(HIST("jetPhi"), jet.phi());
@@ -139,7 +139,7 @@ struct jetTrackQa{
   PROCESS_SWITCH(jetTrackQa, processJetQA, "process jets from jet-finder output", true);
 
 };
-
+*/
 //add another process for MC studies
 struct jetTrackCollisionQa{
 
@@ -179,7 +179,7 @@ struct jetTrackCollisionQa{
     mHistManager.add("leadTrackEta", "leading selected track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
   }
 
-  void processData(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, aod::Jets const& jets, aod::JetTrackConstituents const& constituents, selectedTracks const& tracks)
+  void processData(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::Jets, aod::JetConstituents> const& jets, selectedTracks const& tracks)
   {
     if(collision.posZ() > 10){return;}
     mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
@@ -202,21 +202,21 @@ struct jetTrackCollisionQa{
       double leadingConstTrackPhi = -1;
       double leadingConstTrackEta = -1;
       //access jet constituents as tracks
-      for (const auto& jct : constituents) {//or tracks_as<aod::Tracks>() ? this is not yet wroking because required changes are still missing to join JetTrackCOnstituents with Jets
-        mHistManager.fill(HIST("jetConstTrackPt"), jct.track().pt());
-        mHistManager.fill(HIST("jetConstTrackPhi"), jct.track().phi());
-        mHistManager.fill(HIST("jetConstTrackEta"), jct.track().eta());
-        if(jct.track().pt() > leadingConstTrackPt){
-          leadingConstTrackPt = jct.track().pt();
-          leadingConstTrackPhi = jct.track().phi();
-          leadingConstTrackEta = jct.track().eta();
+      for (auto& jct : j.tracks_as<aod::Tracks>()) {
+        mHistManager.fill(HIST("jetConstTrackPt"), jct.pt());
+        mHistManager.fill(HIST("jetConstTrackPhi"), jct.phi());
+        mHistManager.fill(HIST("jetConstTrackEta"), jct.eta());
+        if(jct.pt() > leadingConstTrackPt){
+          leadingConstTrackPt = jct.pt();
+          leadingConstTrackPhi = jct.phi();
+          leadingConstTrackEta = jct.eta();
         }
       }//end of jet constituent loop
 
       //fill leading jet constituent qa
-      mHistManager.fill(HIST("leadJetConstPt"), leadingConstTrackJetPt);
-      mHistManager.fill(HIST("leadJetConstPhi"), leadingConstTrackJetPhi);
-      mHistManager.fill(HIST("leadJetConstEta"), leadingConstTrackJetEta);
+      mHistManager.fill(HIST("leadJetConstPt"), leadingConstTrackPt);
+      mHistManager.fill(HIST("leadJetConstPhi"), leadingConstTrackPhi);
+      mHistManager.fill(HIST("leadJetConstEta"), leadingConstTrackEta);
     }//end of jet loop
 
     //fill leading jet qa
