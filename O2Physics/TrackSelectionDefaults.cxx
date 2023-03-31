@@ -118,7 +118,7 @@ TrackSelection getJEGlobalTrackSelectionRun2()
   selectedTracks.SetRequireITSRefit(true); 
   selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
   selectedTracks.SetMaxChi2PerClusterITS(36.f);
-  selectedTracks.SetPtRange(0.1f, 1e10f);
+  selectedTracks.SetPtRange(0.15f, 1e10f);
   selectedTracks.SetEtaRange(-0.9f, 0.9f);
   selectedTracks.SetMaxDcaXY(2.4f);  
   selectedTracks.SetMaxDcaZ(3.2f);  
