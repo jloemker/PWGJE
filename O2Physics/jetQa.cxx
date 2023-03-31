@@ -31,116 +31,8 @@ using namespace o2;
 using namespace o2::framework;
 using namespace o2::framework::expressions;
 
-using selectedTracks = soa::Join<aod::Tracks, aod::TracksExtra, aod::TrackSelection>;
-/*
-struct jetTrackQa{
-
-  HistogramRegistry mHistManager{"JetQAHistograms"};
-  Configurable<int> nBins{"nBins", 200, "N bins in histos"};
-  Configurable<int> nBinsPt{"nBinsPt", 200, "N bins in pT histos"};
-  Configurable<int> nBinsEta{"nBinsEta", 200, "N bins in Eta histos"};
-  Configurable<int> nBinsPhi{"nBinsPhi", 200, "N bins in Phi histos"};
-
-  void init(InitContext const&)
-  {
-    //control track qa
-    mHistManager.add("controlTrackPt", "control track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("controlTrackPhi", "control track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
-    mHistManager.add("controlTrackEta", "control track constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-    mHistManager.add("controlCollisionVtxZ", "control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -20, 20}});
-    mHistManager.add("selectedControlCollisionVtxZ", "control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -20, 20}});
-
-    //process jet qa
-    mHistManager.add("jetPt", "inclusive jetPt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("jetPhi", "inclusive jet #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
-    mHistManager.add("jetEta", "inclusive jet #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-
-    mHistManager.add("jetConstPt", "inclusive jet constituent Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("jetConstPhi", "inclusive jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
-    mHistManager.add("jetConstEta", "inclusive jet constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-
-    mHistManager.add("leadJetConstPt", "leading jet constituent Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("leadJetConstPhi", "leading jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
-    mHistManager.add("leadJetConstEta", "leading jet constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-
-    mHistManager.add("jetTrackPt", "track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("jetTrackPhi", "track constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
-    mHistManager.add("jetTrackEta", "track constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-
-    mHistManager.add("leadJetTrackPt", "leading track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
-    mHistManager.add("leadJetTrackPhi", "leading track #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
-    mHistManager.add("leadJetTrackEta", "leading track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
-
-  }
-  //loop over tracks per collision - maybe add an event qa here too 
-  void processTrackQA(aod::Collision const& collision, aod::Tracks const& tracks)
-  {//maybe already for collision and event qa ?
-    mHistManager.fill(HIST("controlCollisionVtxZ"), collision.posZ());
-    if(collision.posZ() > 10){return;}
-    mHistManager.fill(HIST("selectedControlCollisionVtxZ"), collision.posZ());
-    for (auto& track : tracks) {
-      mHistManager.fill(HIST("controlTrackPt"), track.pt());
-      mHistManager.fill(HIST("controlTrackPhi"), track.phi());
-      mHistManager.fill(HIST("controlTrackEta"), track.eta());
-    }
-  }
-  PROCESS_SWITCH(jetTrackQa, processTrackQA, "process selected track qa", true);
-  
-  double leadingJetConstPt = -1;
-  double leadingJetConstPhi = -1;
-  double leadingJetConstEta = -1;
-  double leadingJetConstVtxZ = -1;
-
-  double leadingTrackPt = -1;
-  double leadingTrackPhi = -1;
-  double leadingTrackEta = -1;
-  double leadingTrackVtxZ = -1;
-
-  //loops over jet table - jets have constituents - constituents have tracks -> now the selected tracks ?
-  // for vertex cut we need at least EvSel .. ?
-  void processJetQA(aod::Jet const& jet, aod::JetConstituents const& constituents, aod::Tracks const& tracks)
-  {//first fill all jet QA hists per jet
-    mHistManager.fill(HIST("jetPt"), jet.pt());
-    mHistManager.fill(HIST("jetPhi"), jet.phi());
-    mHistManager.fill(HIST("jetEta"), jet.eta());
-    //fill jet constituent qa
-    for(const auto& c : constituents) {
-      LOGF(debug, "jet %d: track id %d, track pt %g", jet.index(), c.trackId(), c.track().pt());
-      mHistManager.fill(HIST("jetConstPt"), c.track().pt());
-      mHistManager.fill(HIST("jetConstPhi"), c.track().phi());
-      mHistManager.fill(HIST("jetConstEta"), c.track().eta());
-      if(c.track().pt() > leadingJetConstPt){
-        leadingJetConstPt = c.track().pt();
-        leadingJetConstPhi = c.track().phi();
-        leadingJetConstEta = c.track().eta();
-      }
-    }
-    //fill leading constitutent track qa's
-    mHistManager.fill(HIST("leadJetConstPt"), leadingJetConstPt);
-    mHistManager.fill(HIST("leadJetConstPhi"), leadingJetConstPhi);
-    mHistManager.fill(HIST("leadJetConstEta"), leadingJetConstEta);
-    //fill track qa (should be identical to the jet constituent qa)
-    for(const auto& t : tracks){
-      mHistManager.fill(HIST("jetTrackPt"), t.pt());
-      mHistManager.fill(HIST("jetTrackPhi"), t.phi());
-      mHistManager.fill(HIST("jetTrackEta"), t.eta());
-      if(t.pt() > leadingTrackPt){
-        leadingTrackPt = t.pt();
-        leadingTrackPhi = t.phi();
-        leadingTrackEta = t.eta();
-        //leadingTrackVtxZ = t.posZ();
-      }
-    }
-    //fill leading track qa
-    mHistManager.fill(HIST("leadJetTrackPt"), leadingTrackPt);
-    mHistManager.fill(HIST("leadJetTrackPhi"), leadingTrackPhi);
-    mHistManager.fill(HIST("leadJetTrackEta"), leadingTrackEta);
-  }//end processJetQA
-  PROCESS_SWITCH(jetTrackQa, processJetQA, "process jets from jet-finder output", true);
-
-};
-*/
-//add another process for MC studies
+using TracksJE = soa::Join<aod::Tracks, aod::TracksExtra,  aod::TracksDCA, aod::TrackSelection>;
+//add another process for MC studies !
 struct jetTrackCollisionQa{
 
   HistogramRegistry mHistManager{"JetCollisionQAHistograms"};
@@ -149,8 +41,29 @@ struct jetTrackCollisionQa{
   Configurable<int> nBinsEta{"nBinsEta", 200, "N bins in Eta histos"};
   Configurable<int> nBinsPhi{"nBinsPhi", 200, "N bins in Phi histos"};
 
+  TrackSelection validationTracks;
+
   void init(InitContext const&)
   {
+    //set trackselections 
+    //we should not touch the getJEGlobalTrackSelectionRun2 anymore, but here we are free to modify the defaults
+    validationTracks = getJEGlobalTrackSelectionRun2();
+    validationTracks.SetTrackType(o2::aod::track::Run2Track); // Run 2 track asked by default
+    validationTracks.SetMinNCrossedRowsTPC(70);
+    validationTracks.SetMinNCrossedRowsOverFindableClustersTPC(0.8f);
+    validationTracks.SetMaxChi2PerClusterTPC(4.f);
+    validationTracks.SetRequireTPCRefit(true);
+    validationTracks.SetRequireITSRefit(true); 
+    validationTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
+    validationTracks.SetMaxChi2PerClusterITS(36.f);
+    validationTracks.SetPtRange(0.15f, 1e10f);
+    validationTracks.SetEtaRange(-0.9f, 0.9f);
+    validationTracks.SetMaxDcaXY(2.4f);  
+    validationTracks.SetMaxDcaZ(3.2f); 
+    validationTracks.print();
+ 
+    //histograms
+    //1)Jetvalidation from data
     mHistManager.add("collisionVtxZ", "control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -15, 15}});
     //process jet qa
     mHistManager.add("jetPt", "inclusive jetPt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
@@ -177,9 +90,26 @@ struct jetTrackCollisionQa{
     mHistManager.add("leadTrackPt", "leading selected track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
     mHistManager.add("leadTrackPhi", "leading selected track #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("leadTrackEta", "leading selected track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
+
+    //2)Jetvalidation from MC
+    mHistManager.add("MCcollisionVtxZ", "MC control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -15, 15}});
+    //process jet qa
+    mHistManager.add("MCjetPt", "MC inclusive jetPt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
+    mHistManager.add("MCjetPhi", "MC inclusive jet #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, -3.2, 6.4}});
+    mHistManager.add("MCjetEta", "MC inclusive jet #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
+    //process jet constituent qa - constituents as tracks
+    mHistManager.add("MCjetConstTrackPt", "MC inclusive jet constituent Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
+    mHistManager.add("MCjetConstTrackPhi", "MC inclusive jet constituent #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
+    mHistManager.add("MCjetConstTrackEta", "MC inclusive jet constituent #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
+    //cross check the cuts from Run2Hybrid selection
+    mHistManager.add("MCselectedTrackPt", "MC hybrid track Pt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
+    mHistManager.add("MCselectedTrackPhi", "MC hybrid track #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
+    mHistManager.add("MCselectedTrackEta", "MC hybrid track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
+
   }
 
-  void processData(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::Jets, aod::JetConstituents> const& jets, selectedTracks const& tracks)
+  //Filter trackCuts = (aod::track::pt >= trackPtMin && aod::track::pt < trackPtMax && aod::track::eta > trackEtaMin && aod::track::eta < trackEtaMax && aod::track::phi >= trackPhiMin && aod::track::phi <= trackPhiMax); // or like this ...
+  void processData(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::Jets, aod::JetConstituents> const& jets, TracksJE const& tracks)
   {
     if(collision.posZ() > 10){return;}
     mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
@@ -202,7 +132,7 @@ struct jetTrackCollisionQa{
       double leadingConstTrackPhi = -1;
       double leadingConstTrackEta = -1;
       //access jet constituents as tracks
-      for (auto& jct : j.tracks_as<aod::Tracks>()) {
+      for (auto& jct : j.tracks_as<TracksJE>()) {
         mHistManager.fill(HIST("jetConstTrackPt"), jct.pt());
         mHistManager.fill(HIST("jetConstTrackPhi"), jct.phi());
         mHistManager.fill(HIST("jetConstTrackEta"), jct.eta());
@@ -229,6 +159,9 @@ struct jetTrackCollisionQa{
     double leadingTrackEta = -1;
     //qa histograms for selected tracks in collision
     for(const auto& t : tracks){
+      //if (static_cast<std::string>(trackSelections) == "hybridTracksJE" && !TracksJE.IsSelected(t)){continue;}
+      //if(!t.trackCutFlagFb5()){continue;} 
+      if(!validationTracks.IsSelected(t)){continue;}
       mHistManager.fill(HIST("selectedTrackPt"), t.pt());
       mHistManager.fill(HIST("selectedTrackPhi"), t.phi());
       mHistManager.fill(HIST("selectedTrackEta"), t.eta());
@@ -250,7 +183,6 @@ struct jetTrackCollisionQa{
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
   return WorkflowSpec{
-    //adaptAnalysisTask<jetTrackQa>(cfgc)
     adaptAnalysisTask<jetTrackCollisionQa>(cfgc)
     };
 }
