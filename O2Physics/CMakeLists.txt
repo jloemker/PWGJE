@@ -52,8 +52,8 @@ if(FastJet_FOUND)
                         SOURCES jetsubstructurehfoutput.cxx
                         PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::PWGJECore O2Physics::AnalysisCore
                         COMPONENT_NAME Analysis)
-    o2physics_add_dpl_workflow(jet-track-qa
-                        SOURCES jetQa.cxx
+    o2physics_add_dpl_workflow(jet-validation-qa
+                        SOURCES jet-validation-qa.cxx
                         PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::PWGJECore O2Physics::AnalysisCore
                         COMPONENT_NAME Analysis)   
 endif()

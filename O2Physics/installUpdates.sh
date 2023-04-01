@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #copy file to jet tasks
-cp jetQa.cxx /home/johannalomker/alice/O2Physics/PWGJE/Tasks/jetQa.cxx
+cp jet-validation-qa.cxx /home/johannalomker/alice/O2Physics/PWGJE/Tasks/jet-validation-qa.cxx
 cp CMakeLists.txt /home/johannalomker/alice/O2Physics/PWGJE/Tasks/CMakeLists.txt
 cp TrackSelectionDefaults.cxx /home/johannalomker/alice/O2Physics/Common/Core/TrackSelectionDefaults.cxx
 cp TrackSelectionDefaults.h /home/johannalomker/alice/O2Physics/Common/Core/TrackSelectionDefaults.h

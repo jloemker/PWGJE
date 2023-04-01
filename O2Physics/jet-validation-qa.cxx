@@ -56,10 +56,10 @@ struct jetTrackCollisionQa{
     validationTracks.SetRequireITSRefit(true); 
     validationTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
     validationTracks.SetMaxChi2PerClusterITS(36.f);
-    validationTracks.SetPtRange(0.15f, 1e10f);
+    validationTracks.SetPtRange(0.15f, 1e10f); // the 0.15 is the original hybrid cuts
     validationTracks.SetEtaRange(-0.9f, 0.9f);
     validationTracks.SetMaxDcaXY(2.4f);  
-    validationTracks.SetMaxDcaZ(3.2f); 
+    validationTracks.SetMaxDcaZ(3.2f);
     validationTracks.print();
  
     //histograms
@@ -133,6 +133,7 @@ struct jetTrackCollisionQa{
       double leadingConstTrackEta = -1;
       //access jet constituents as tracks
       for (auto& jct : j.tracks_as<TracksJE>()) {
+        if(!validationTracks.IsSelected(jct)){continue;}
         mHistManager.fill(HIST("jetConstTrackPt"), jct.pt());
         mHistManager.fill(HIST("jetConstTrackPhi"), jct.phi());
         mHistManager.fill(HIST("jetConstTrackEta"), jct.eta());
@@ -159,8 +160,6 @@ struct jetTrackCollisionQa{
     double leadingTrackEta = -1;
     //qa histograms for selected tracks in collision
     for(const auto& t : tracks){
-      //if (static_cast<std::string>(trackSelections) == "hybridTracksJE" && !TracksJE.IsSelected(t)){continue;}
-      //if(!t.trackCutFlagFb5()){continue;} 
       if(!validationTracks.IsSelected(t)){continue;}
       mHistManager.fill(HIST("selectedTrackPt"), t.pt());
       mHistManager.fill(HIST("selectedTrackPhi"), t.phi());
