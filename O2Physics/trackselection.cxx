@@ -44,7 +44,6 @@ struct TrackSelectionTask {
   Configurable<float> ptMax{"ptMax", 1e10f, "Upper cut on pt for the track selected"};
   Configurable<float> etaMin{"etaMin", -0.8, "Lower cut on eta for the track selected"};
   Configurable<float> etaMax{"etaMax", 0.8, "Upper cut on eta for the track selected"};
-  Configurable<bool> hybridTracksJE{"hybridTracks", false, "option to select hybrid tracks (run2 specific) for jets"};
 
   Produces<aod::TrackSelection> filterTable;
   Produces<aod::TrackSelectionExtension> filterTableDetail;
@@ -54,6 +53,7 @@ struct TrackSelectionTask {
   TrackSelection filtBit2;
   TrackSelection filtBit3;
   TrackSelection filtBit4;
+  TrackSelection filtBit5;
 
   void init(InitContext&)
   {
@@ -61,9 +61,12 @@ struct TrackSelectionTask {
       case 0:
         // Run 2 SPD kAny
         if (!isRun3) {
-         // LOG(info) << "setting up globalTracks = getGlobalTrackSelection();";
-          if(!hybridTracksJE){globalTracks = getGlobalTrackSelection();}
-          else{globalTracks = getJEGlobalTrackSelectionRun2();}//get the global hybrid tracks according to ali pysics cuts
+          LOG(info) << "setting up globalTracks = getGlobalTrackSelection();";
+         // if(!hybridTracksJE){
+          globalTracks = getGlobalTrackSelection();
+          //}
+          
+          //else{globalTracks = getJEGlobalTrackSelectionRun2();}//get the global hybrid tracks according to ali physics cuts
           break;
         }
         LOG(warning) << "isRun3 == true and itsMatching == 0: not setting globalTracks = getGlobalTrackSelection();, but going to itsMatching == 1 and set getGlobalTrackSelectionRun3ITSMatch(TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSibAny)";
@@ -113,6 +116,8 @@ struct TrackSelectionTask {
     filtBit3 = getGlobalTrackSelectionRun3HF();
 
     filtBit4 = getGlobalTrackSelectionRun3Nuclei();
+    LOG(info) << "setting up filtBit5 = getJEGlobalTrackSelectionRun2();";
+    filtBit5 = getJEGlobalTrackSelectionRun2();
   }
 
   void process(soa::Join<aod::FullTracks, aod::TracksDCA> const& tracks)
@@ -124,9 +129,10 @@ struct TrackSelectionTask {
         o2::aod::track::TrackSelectionFlags::flagtype trackflagFB2 = filtBit2.IsSelectedMask(track);
         // o2::aod::track::TrackSelectionFlags::flagtype trackflagFB3 = filtBit3.IsSelectedMask(track); // only temporarily commented, will be used
         // o2::aod::track::TrackSelectionFlags::flagtype trackflagFB4 = filtBit4.IsSelectedMask(track);
+        // o2::aod::track::TrackSelectionFlags::flagtype trackflagFB5 = filtBit5.IsSelectedMask(track);
 
         filterTable((uint8_t)0,
-                    globalTracks.IsSelectedMask(track), filtBit1.IsSelected(track), filtBit2.IsSelected(track), filtBit3.IsSelected(track), filtBit4.IsSelected(track));
+                    globalTracks.IsSelectedMask(track), filtBit1.IsSelected(track), filtBit2.IsSelected(track), filtBit3.IsSelected(track), filtBit4.IsSelected(track), filtBit5.IsSelected(track));
         if (produceFBextendedTable) {
           filterTableDetail(o2::aod::track::TrackSelectionFlags::checkFlag(trackflagGlob, o2::aod::track::TrackSelectionFlags::kTrackType),
                             o2::aod::track::TrackSelectionFlags::checkFlag(trackflagGlob, o2::aod::track::TrackSelectionFlags::kPtRange),
@@ -153,7 +159,7 @@ struct TrackSelectionTask {
     for (auto& track : tracks) {
       o2::aod::track::TrackSelectionFlags::flagtype trackflagGlob = globalTracks.IsSelectedMask(track);
       filterTable((uint8_t)globalTracksSDD.IsSelected(track),
-                  globalTracks.IsSelectedMask(track), filtBit1.IsSelected(track), filtBit2.IsSelected(track), filtBit3.IsSelected(track), filtBit4.IsSelected(track));
+                  globalTracks.IsSelectedMask(track), filtBit1.IsSelected(track), filtBit2.IsSelected(track), filtBit3.IsSelected(track), filtBit4.IsSelected(track), filtBit5.IsSelected(track));
       if (produceFBextendedTable) {
         filterTableDetail(o2::aod::track::TrackSelectionFlags::checkFlag(trackflagGlob, o2::aod::track::TrackSelectionFlags::kTrackType),
                           o2::aod::track::TrackSelectionFlags::checkFlag(trackflagGlob, o2::aod::track::TrackSelectionFlags::kPtRange),
