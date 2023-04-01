@@ -437,7 +437,7 @@
         "processDataFull": "false",
         "processParticleLevel": "false"
     },
-    "jet-track-collision-qa": {
+    "jet-validation-track-collision-qa": {
         "nBins": "200",
         "nBinsPt": "200",
         "nBinsEta": "200",
