@@ -182,6 +182,6 @@ struct jetTrackCollisionQa{
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
   return WorkflowSpec{
-    adaptAnalysisTask<jetTrackCollisionQa>(cfgc)
+    adaptAnalysisTask<jetTrackCollisionQa>(cfgc, TaskName{"jet-validation-track-collision-qa"})
     };
 }

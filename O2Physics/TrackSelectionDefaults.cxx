@@ -107,7 +107,7 @@ TrackSelection getGlobalTrackSelectionRun3HF()
   return selectedTracks;
 }
 
-// Default track selection for jet validation based on hybrid cuts for ESD's from run 2
+// Default track selection for jet validation based on hybrid cuts for converted (based on ESD's from run 2) A02D's
 TrackSelection getJEGlobalTrackSelectionRun2()
 {
   TrackSelection selectedTracks;
@@ -119,7 +119,7 @@ TrackSelection getJEGlobalTrackSelectionRun2()
   selectedTracks.SetRequireITSRefit(true); 
   selectedTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
   selectedTracks.SetMaxChi2PerClusterITS(36.f);
-  selectedTracks.SetPtRange(0.1f, 1e10f); // slightly lower initial cut
+  selectedTracks.SetPtRange(0.1f, 1e10f); // slightly lower initial cut for maximal flexibility
   selectedTracks.SetEtaRange(-0.9f, 0.9f);
   selectedTracks.SetMaxDcaXY(2.4f);  
   selectedTracks.SetMaxDcaZ(3.2f);  
