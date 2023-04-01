@@ -1,14 +1,12 @@
 #!/bin/sh
 
-#1) Files for Track O2 PR (extension of filterbits)
-#cp TrackSelectionTables.h /home/johannalomker/alice/O2Physics/Common/DataModel/TrackSelectionTables.h 
-
-#2) Files for Track O2Physics PR (extend defaults with loose jet validation hybrid cuts; tighten in jetfinder and jet-validation-qa-task):
+#1) Files for Track O2Physics PR (extend defaults with loose jet validation hybrid cuts; tighten in jetfinder and jet-validation-qa-task):
 #cp trackselection.cxx /home/johannalomker/alice/O2Physics/Common/TableProducer/trackselection.cxx 
 #cp TrackSelectionDefaults.cxx /home/johannalomker/alice/O2Physics/Common/Core/TrackSelectionDefaults.cxx
 #cp TrackSelectionDefaults.h /home/johannalomker/alice/O2Physics/Common/Core/TrackSelectionDefaults.h
+#cp TrackSelectionTables.h /home/johannalomker/alice/O2Physics/Common/DataModel/TrackSelectionTables.h 
 
-#3)Files for jet PR:
+#2)Files for jet PR:
 cp jet-validation-qa.cxx /home/johannalomker/alice/O2Physics/PWGJE/Tasks/jet-validation-qa.cxx
 cp CMakeLists.txt /home/johannalomker/alice/O2Physics/PWGJE/Tasks/CMakeLists.txt
 #cp jetfinder.cxx /home/johannalomker/alice/O2Physics/PWGJE/TableProducer
