@@ -107,7 +107,7 @@ TrackSelection getGlobalTrackSelectionRun3HF()
   return selectedTracks;
 }
 
-// Default track selection for jet validation based on hybrid cuts for converted (based on ESD's from run 2) A02D's
+// Reduced default track selection for jet validation based on hybrid cuts for converted (based on ESD's from run 2) A02D's
 TrackSelection getJEGlobalTrackSelectionRun2()
 {
   TrackSelection selectedTracks;

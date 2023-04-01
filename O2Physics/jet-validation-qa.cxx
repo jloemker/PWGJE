@@ -108,7 +108,6 @@ struct jetTrackCollisionQa{
 
   }
 
-  //Filter trackCuts = (aod::track::pt >= trackPtMin && aod::track::pt < trackPtMax && aod::track::eta > trackEtaMin && aod::track::eta < trackEtaMax && aod::track::phi >= trackPhiMin && aod::track::phi <= trackPhiMax); // or like this ...
   void processData(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::Jets, aod::JetConstituents> const& jets, TracksJE const& tracks)
   {
     if(collision.posZ() > 10){return;}

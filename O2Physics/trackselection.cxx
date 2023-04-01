@@ -62,11 +62,7 @@ struct TrackSelectionTask {
         // Run 2 SPD kAny
         if (!isRun3) {
           LOG(info) << "setting up globalTracks = getGlobalTrackSelection();";
-         // if(!hybridTracksJE){
           globalTracks = getGlobalTrackSelection();
-          //}
-          
-          //else{globalTracks = getJEGlobalTrackSelectionRun2();}//get the global hybrid tracks according to ali physics cuts
           break;
         }
         LOG(warning) << "isRun3 == true and itsMatching == 0: not setting globalTracks = getGlobalTrackSelection();, but going to itsMatching == 1 and set getGlobalTrackSelectionRun3ITSMatch(TrackSelection::GlobalTrackRun3ITSMatching::Run3ITSibAny)";
@@ -116,8 +112,9 @@ struct TrackSelectionTask {
     filtBit3 = getGlobalTrackSelectionRun3HF();
 
     filtBit4 = getGlobalTrackSelectionRun3Nuclei();
+
     LOG(info) << "setting up filtBit5 = getJEGlobalTrackSelectionRun2();";
-    filtBit5 = getJEGlobalTrackSelectionRun2();
+    filtBit5 = getJEGlobalTrackSelectionRun2(); // Jet validation requires reduced set of cuts
   }
 
   void process(soa::Join<aod::FullTracks, aod::TracksDCA> const& tracks)

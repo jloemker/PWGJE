@@ -101,7 +101,7 @@ struct JetFinderTask {
       globalTracks.SetPtRange(trackPhiMin, trackPtMax);
     }
     if (static_cast<std::string>(trackSelections) == "validationTracks") {
-      validationTracks = getJEGlobalTrackSelectionRun2();
+      validationTracks = getJEGlobalTrackSelectionRun2(); // defined in TrackSelectionDefaults
       validationTracks.SetTrackType(o2::aod::track::Run2Track); // Run 2 track asked by default
       validationTracks.SetMinNCrossedRowsTPC(70);
       validationTracks.SetMinNCrossedRowsOverFindableClustersTPC(0.8f);
@@ -110,8 +110,8 @@ struct JetFinderTask {
       validationTracks.SetRequireITSRefit(true); 
       validationTracks.SetRequireHitsInITSLayers(1, {0, 1}); // one hit in any SPD layer
       validationTracks.SetMaxChi2PerClusterITS(36.f);
-      validationTracks.SetPtRange(trackPtMin, trackPtMax);
-      validationTracks.SetEtaRange(trackEtaMin, trackEtaMax);
+      validationTracks.SetPtRange(trackPtMin, trackPtMax); // update in config to min 0.15
+      validationTracks.SetEtaRange(trackEtaMin, trackEtaMax); //update in config to min 0.15
       validationTracks.SetMaxDcaXY(2.4f);  
       validationTracks.SetMaxDcaZ(3.2f); 
     }
