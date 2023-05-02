@@ -12,32 +12,31 @@
 //  \author
 //  Johanna Lömker
 //  \since Dec 2022
-// The goal would be to set up the jet, track and event/collision QA's for the validation framework
-// Staring with the hybrid tracks - i tried, i failed, i will try again ...
 
 // 1)Configuration for run2 validation on ESD:
-// i)  turn dummy from jetTrackCollisionQa -> false and processESD -> true
-// ii) turn dummy from mcJetTrackCollisionQa -> true and processMcRun3 -> false
-// iii)choose "hybridTracksJE" in jetfinder configuration
-// Pipe: o2-analysis-timestamp ${OPTIONS} | o2-analysis-event-selection ${OPTIONS} 
-//      | o2-analysis-trackselection ${OPTIONS} | o2-analysis-trackextension ${OPTIONS} 
-//      | o2-analysis-je-jet-finder ${OPTIONS} | o2-analysis-zdc-converter ${OPTIONS} 
-//      | o2-analysis-je-jet-validation-qa ${OPTIONS}
+//  Use run2ESD.sh with configRun2ESD.json    
+// 2)Configuration for run3 validation on AOD:
+//  Use run3AOD.sh with configRun3AOD.json
+// 3)Configuration for MC validation on converted run2 AOD:
+//  Use runMC2.sh with configMC2Jet.json  
+// 4) Configuration for MC validation on run3 AOD:  
+// Use runMC3.sh with configMC3Jet.json 
 
-// 2)Configuration for MC validation on run2/3 data (might need the zdc converter too):
-// i)  turn dummy from jetTrackCollisionQa -> true and processESD -> false
-// ii) turn dummy from mcJetTrackCollisionQa -> false and processMcRun2/3 -> true
-// Pipe(run3): o2-analysis-timestamp ${OPTIONS} | o2-analysis-event-selection ${OPTIONS} 
-//           | o2-analysis-trackselection ${OPTIONS} | o2-analysis-track-propagation ${OPTIONS} 
-//           | o2-analysis-collision-converter ${OPTIONS} | o2-analysis-zdc-converter ${OPTIONS} 
-//           | o2-analysis-je-jet-finder ${OPTIONS} | o2-analysis-je-jet-validation-qa ${OPTIONS} 
-// Pipe(run2): o2-analysis-timestamp ${OPTIONS} | o2-analysis-event-selection ${OPTIONS} |  
-//           | o2-analysis-trackselection ${OPTIONS} | o2-analysis-trackextension ${OPTIONS} 
-//           | o2-analysis-collision-converter ${OPTIONS} | o2-analysis-zdc-converter ${OPTIONS}
-//           | o2-analysis-je-jet-finder ${OPTIONS} | o2-analysis-je-jet-validation-qa ${OPTIONS} 
-           
-
-// 3)Configuration for validation on run3 data:
+  ////////////////=============================================////////////////
+  //                              TODO's: 
+  //============== 1)template in mcJetTrackCollisionQa to validate JetMatching !
+  // look at matching https://github.com/AliceO2Group/O2Physics/blob/723d78931b446e7b5f6e0673c0345fcef584e796/Tutorials/src/mcHistograms.cxx#L154
+  // loop over matched jets
+  // make additional TH2F's for matched jets in pt, phi, eta (similarly to the ones for tracks/collisions)
+  //        i) with mcrec vs mcpart 
+  //        ii)with (mcrec-mcpart)/mcpart as function of mcpart
+  //
+  //============== 2) add logarithmic x-axis for pt plots - also in AliPhysics !
+  // look here https://github.com/AliceO2Group/QualityControl/blob/17798501ac1cbc9a9f25797ed15c68244c0a36f0/Modules/MUON/MCH/src/RofsTask.cxx#L58
+  //
+  //============== 3) add explicit filters for collision and tracks (?)
+  //
+  ////////////////=============================================////////////////
 
 #include "Framework/runDataProcessing.h"
 #include "Framework/AnalysisTask.h"
@@ -46,6 +45,7 @@
 #include "Framework/HistogramRegistry.h"
 
 #include "PWGJE/DataModel/Jet.h"
+#include "PWGJE/TableProducer/jetfinder.h"
 
 #include "Common/DataModel/EventSelection.h"
 #include "Common/Core/TrackSelection.h"
@@ -57,26 +57,29 @@ using namespace o2::framework::expressions;
 
 // tracks for 1) validation on ESD 2) Run2 MC validatio on AO2D's 3) Run2 MC validation on AO2D's
 using TracksJE = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection>;
-using MCTracksRun3JE = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, aod::McTrackLabels>;// 
-using MCTracksRun2JE = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, aod::McTrackLabels>;// Actually alll the same ?
+using MCTracksRun3JE = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, aod::McTrackLabels>;
+using MCTracksRun2JE = soa::Join<aod::Tracks, aod::TracksExtra, aod::TracksDCA, aod::TrackSelection, aod::McTrackLabels>;// for now the same
 
-// struct for jetfinder validation on run2 ESD's
+// struct for jetfinder validation on run2 ESD's and run3 data
 struct jetTrackCollisionQa {
 
   HistogramRegistry mHistManager{"JetCollisionQAHistograms"};
   Configurable<int> nBins{"nBins", 200, "N bins in histos"};
-  Configurable<int> nBinsPt{"nBinsPt", 200, "N bins in pT histos"};// maybe adding logarithmic x-axis already ?
+  Configurable<int> nBinsPt{"nBinsPt", 200, "N bins in pT histos"};
   Configurable<int> nBinsEta{"nBinsEta", 200, "N bins in Eta histos"};
   Configurable<int> nBinsPhi{"nBinsPhi", 200, "N bins in Phi histos"};
+  Configurable<std::string> trackSelections{"trackSelections", "globalTracks", "set track selections"};
 
-  TrackSelection validationTracks;
+  std::string trackSelection;
 
   void init(InitContext const&)
   {
-    //set trackselections - initial idea for now on hold
-    //we should not touch the getJEGlobalTrackSelectionRun2 anymore, but here we are free to modify the defaults
-    validationTracks = getJEGlobalTrackSelectionRun2();//the trackselection that we should keep in mind !
-    /*validationTracks.SetTrackType(o2::aod::track::Run2Track); // Run 2 track asked by default
+    //set trackselections 
+    trackSelection = static_cast<std::string>(trackSelections);
+    //trackSelection = getJEGlobalTrackSelectionRun2();
+    /* These are the full hybrid track cuts 
+       keep them here to not forget about this definition as it is a bit difficult to see it from the TrackSelectionDefaults.h/cxx
+    validationTracks.SetTrackType(o2::aod::track::Run2Track); // Run 2 track asked by default
     validationTracks.SetMinNCrossedRowsTPC(70);
     validationTracks.SetMinNCrossedRowsOverFindableClustersTPC(0.8f);
     validationTracks.SetMaxChi2PerClusterTPC(4.f);
@@ -121,97 +124,162 @@ struct jetTrackCollisionQa {
     mHistManager.add("leadTrackEta", "leading selected track #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
   }
 
-  void processESD(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::ChargedJets, aod::ChargedJetConstituents> const& jets, TracksJE const& tracks)
-  {//check for tracks - add configuarable for both structs to switch between global and hybrid tracks 
+  template <typename validationTracks>
+  void fillTrackQA(validationTracks const& track)
+  { 
+    if (!selectTrack(track, trackSelection)) {
+      return;
+    }
+    mHistManager.fill(HIST("selectedTrackPt"), track.pt());
+    mHistManager.fill(HIST("selectedTrackPhi"), track.phi());
+    mHistManager.fill(HIST("selectedTrackEta"), track.eta());
+  }// end of fillTrackQA template
 
-  /* 
-  // function that performs track selections on each track
-template <typename T>
-bool selectTrack(T const& track, std::string trackSelection)
-{
-  if (trackSelection == "globalTracks" && !track.isGlobalTrackWoPtEta()) {
-    return false;
-  } else if (trackSelection == "QualityTracks" && !track.isQualityTrack()) {
-    return false;
-  } else if (trackSelection == "hybridTracksJE" && !track.trackCutFlagFb5()) {//isQualityTrack
-    return false;
-  } else {
-    return true;
-  }
-}
-  */
+  //template <typename validationTracks>
+  void fillLeadingTrackQA(double leadingTrackPt, double leadingTrackPhi, double leadingTrackEta)
+  { 
+    mHistManager.fill(HIST("leadTrackPt"), leadingTrackPt);
+    mHistManager.fill(HIST("leadTrackPhi"), leadingTrackPhi);
+    mHistManager.fill(HIST("leadTrackEta"), leadingTrackEta);
+  }// end of fillLeadingTrackQA template
+
+  template <typename dataJet>
+  void fillJetQA(dataJet const& jet)
+  { 
+    mHistManager.fill(HIST("jetPt"), jet.pt());
+    mHistManager.fill(HIST("jetPhi"), jet.phi());
+    mHistManager.fill(HIST("jetEta"), jet.eta());
+  }// end of fillJetQA template
+
+  //template <typename validationTracks>
+  void fillLeadingJetQA(double leadingJetPt, double leadingJetPhi, double leadingJetEta)
+  { 
+    mHistManager.fill(HIST("leadJetPt"), leadingJetPt);
+    mHistManager.fill(HIST("leadJetPhi"), leadingJetPhi);
+    mHistManager.fill(HIST("leadJetEta"), leadingJetEta);
+  }// end of fillLeadingJetQA template
+
+  template <typename dataJetConstituent>
+  void fillJetConstituentQA(dataJetConstituent const& jct)
+  {
+    mHistManager.fill(HIST("jetConstTrackPt"), jct.pt());
+    mHistManager.fill(HIST("jetConstTrackPhi"), jct.phi());
+    mHistManager.fill(HIST("jetConstTrackEta"), jct.eta());
+  }// end of mcDetJetConstituent template
+
+  //template <typename validationTracks>
+  void fillLeadingJetConstQA(double leadingConstTrackPt, double leadingConstTrackPhi, double leadingConstTrackEta)
+  { 
+    mHistManager.fill(HIST("leadJetConstPt"), leadingConstTrackPt);
+    mHistManager.fill(HIST("leadJetConstPhi"), leadingConstTrackPhi);
+    mHistManager.fill(HIST("leadJetConstEta"), leadingConstTrackEta);
+  }// end of fillLeadingJetConstQA template
+
+  void processESD(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::ChargedJets, aod::ChargedJetConstituents> const& jets, TracksJE const& tracks)
+  {
     if (!collision.sel7() || abs(collision.posZ()) > 10) {
       return;
     }
     mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
-
-    double leadingJetPt = -1;
-    double leadingJetPhi = -1;
-    double leadingJetEta = -1;
-    // jet QA hists per jet in this collision
-    for (const auto& j : jets) {
-      mHistManager.fill(HIST("jetPt"), j.pt());
-      mHistManager.fill(HIST("jetPhi"), j.phi());
-      mHistManager.fill(HIST("jetEta"), j.eta());
-      if (j.pt() > leadingJetPt) {
-        leadingJetPt = j.pt();
-        leadingJetPhi = j.phi();
-        leadingJetEta = j.eta();
-      }
-
-      double leadingConstTrackPt = -1;
-      double leadingConstTrackPhi = -1;
-      double leadingConstTrackEta = -1;
-      // access jet constituents as tracks
-      for (auto& jct : j.tracks_as<TracksJE>()) {
-        mHistManager.fill(HIST("jetConstTrackPt"), jct.pt());
-        mHistManager.fill(HIST("jetConstTrackPhi"), jct.phi());
-        mHistManager.fill(HIST("jetConstTrackEta"), jct.eta());
-        if (jct.pt() > leadingConstTrackPt) {
-          leadingConstTrackPt = jct.pt();
-          leadingConstTrackPhi = jct.phi();
-          leadingConstTrackEta = jct.eta();
-        }
-      } // end of jet constituent loop
-
-      // fill leading jet constituent qa
-      mHistManager.fill(HIST("leadJetConstPt"), leadingConstTrackPt);
-      mHistManager.fill(HIST("leadJetConstPhi"), leadingConstTrackPhi);
-      mHistManager.fill(HIST("leadJetConstEta"), leadingConstTrackEta);
-    } // end of jet loop
-
-    // fill leading jet qa
-    mHistManager.fill(HIST("leadJetPt"), leadingJetPt);
-    mHistManager.fill(HIST("leadJetPhi"), leadingJetPhi);
-    mHistManager.fill(HIST("leadJetEta"), leadingJetEta);
 
     double leadingTrackPt = -1;
     double leadingTrackPhi = -1;
     double leadingTrackEta = -1;
     // qa histograms for selected tracks in collision
     for (const auto& t : tracks) {
-      //if (!validationTracks.IsSelected(t)) { // we need a crosscheck for Fb5 - first we need Fb5 then we can add this here
-      //  continue;
-      //} // check if this is really a global track - maybe adding hists for rejected tracks ?
-      mHistManager.fill(HIST("selectedTrackPt"), t.pt());
-      mHistManager.fill(HIST("selectedTrackPhi"), t.phi());
-      mHistManager.fill(HIST("selectedTrackEta"), t.eta());
+      fillTrackQA(t);
       if (t.pt() > leadingTrackPt) {
         leadingTrackPt = t.pt();
         leadingTrackPhi = t.phi();
         leadingTrackEta = t.eta();
       }
     } // end of tracks loop
+    //fill leading track  
+    fillLeadingTrackQA(leadingTrackPt, leadingTrackPhi,leadingTrackEta);
 
-    // fill leading selected track qa
-    mHistManager.fill(HIST("leadTrackPt"), leadingTrackPt);
-    mHistManager.fill(HIST("leadTrackPhi"), leadingTrackPhi);
-    mHistManager.fill(HIST("leadTrackEta"), leadingTrackEta);
+    double leadingJetPt = -1;
+    double leadingJetPhi = -1;
+    double leadingJetEta = -1;
+    // jet QA hists per jet in this collision
+    for (const auto& j : jets) {
+      fillJetQA(j);
+      if (j.pt() > leadingJetPt) {
+        leadingJetPt = j.pt();
+        leadingJetPhi = j.phi();
+        leadingJetEta = j.eta();
+      }
+      double leadingConstTrackPt = -1;
+      double leadingConstTrackPhi = -1;
+      double leadingConstTrackEta = -1;
+      // access jet constituents as tracks
+      for (auto& jct : j.tracks_as<TracksJE>()) {
+        fillJetConstituentQA(jct);
+        if (jct.pt() > leadingConstTrackPt) {
+          leadingConstTrackPt = jct.pt();
+          leadingConstTrackPhi = jct.phi();
+          leadingConstTrackEta = jct.eta();
+        }
+      } // end of jet constituent loop
+      // fill leading jet constituent qa
+      fillLeadingJetConstQA(leadingConstTrackPt, leadingConstTrackPhi, leadingConstTrackEta);
+    } // end of jet loop
+    // fill leading jet qa
+    fillLeadingJetQA(leadingJetPt, leadingJetPhi, leadingJetEta);
   } // end process
   PROCESS_SWITCH(jetTrackCollisionQa, processESD, "validate jet-finder output on run2 ESD", true);
 
-  // To Do: add run3 data valdation qa process
-  // void processRun3()
+  // process for run3 AOD's
+  void processRun3AOD(soa::Join<aod::Collisions, aod::EvSels>::iterator const& collision, soa::Join<aod::ChargedJets, aod::ChargedJetConstituents> const& jets, TracksJE const& tracks)
+  {
+    if (!collision.sel8() || abs(collision.posZ()) > 10) {
+      return;
+    }
+    mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
+    double leadingTrackPt = -1;
+    double leadingTrackPhi = -1;
+    double leadingTrackEta = -1;
+    // qa histograms for selected tracks in collision
+    for (const auto& t : tracks) {
+      fillTrackQA(t);
+      if (t.pt() > leadingTrackPt) {
+        leadingTrackPt = t.pt();
+        leadingTrackPhi = t.phi();
+        leadingTrackEta = t.eta();
+      }
+    } // end of tracks loop
+    //fill leading track  
+    fillLeadingTrackQA(leadingTrackPt, leadingTrackPhi,leadingTrackEta);
+
+    double leadingJetPt = -1;
+    double leadingJetPhi = -1;
+    double leadingJetEta = -1;
+    // jet QA hists per jet in this collision
+    for (const auto& j : jets) {
+      fillJetQA(j);
+      if (j.pt() > leadingJetPt) {
+        leadingJetPt = j.pt();
+        leadingJetPhi = j.phi();
+        leadingJetEta = j.eta();
+      }
+      double leadingConstTrackPt = -1;
+      double leadingConstTrackPhi = -1;
+      double leadingConstTrackEta = -1;
+      // access jet constituents as tracks
+      for (auto& jct : j.tracks_as<TracksJE>()) {
+        fillJetConstituentQA(jct);
+        if (jct.pt() > leadingConstTrackPt) {
+          leadingConstTrackPt = jct.pt();
+          leadingConstTrackPhi = jct.phi();
+          leadingConstTrackEta = jct.eta();
+        }
+      } // end of jet constituent loop
+      // fill leading jet constituent qa
+      fillLeadingJetConstQA(leadingConstTrackPt, leadingConstTrackPhi, leadingConstTrackEta);
+    } // end of jet loop
+    // fill leading jet qa
+    fillLeadingJetQA(leadingJetPt, leadingJetPhi, leadingJetEta);
+  }
+  PROCESS_SWITCH(jetTrackCollisionQa, processRun3AOD, "validate jet-finder output on run3 AOD", false);
 
   // dummy process to run jetfinder validation code on ESD, but MC validation for run3 on hyperloop
   void processDummy(aod::Collisions const& collision)
@@ -228,24 +296,24 @@ struct mcJetTrackCollisionQa {
   Configurable<int> nBinsPt{"nBinsPt", 200, "N bins in pT histos"};
   Configurable<int> nBinsEta{"nBinsEta", 200, "N bins in Eta histos"};
   Configurable<int> nBinsPhi{"nBinsPhi", 200, "N bins in Phi histos"};
+  Configurable<std::string> trackSelections{"trackSelections", "globalTracks", "set track selections"};
 
-  TrackSelection validationTracks;
+  std::string trackSelection;
 
   void init(InitContext const&)
   {
-    validationTracks = getGlobalTrackSelection(); // using global tracks instead - will automatically select run2/3 cuts
+    // set trackselection
+    trackSelection = static_cast<std::string>(trackSelections);
 
     // histograms
     // 2)Jetvalidation on MC: generator = particle = mcTruth and reconstruction = detector (=tracks) 
     mHistManager.add("collisionVtxZ", "Control collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -15, 15}});
     mHistManager.add("genMCcollisionVtxZ", "MC control gen.collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -15, 15}});
     mHistManager.add("recMCcollisionVtxZ", "MC control rec.collsion VtxZ ; z [cm]", HistType::kTH1F, {{nBins, -15, 15}});
-    // 2D for reco vs. truth level - not yet filled 
-    /*
-    mHistManager.add("collkMatchPosZ","MC reco vs truth; MC truth posZ (cm); MC reco posZ (cm)", {HistType::kTH2F, {{nBins, -15, 15}, {nBins, -15, 15}}});
+    // 2D for reco vs. truth level
+    mHistManager.add("collMatchPosZ","MC reco vs truth; MC truth posZ (cm); MC reco posZ (cm)", {HistType::kTH2F, {{nBins, -15, 15}, {nBins, -15, 15}}});
     // 2D for 'relative resolution figure'
     mHistManager.add("collResolutionPt","Collision reso #Delta posZ = (MC reco - MC truth)/ MC truth; MC truth posZ (cm); #Delta posZ (cm)", {HistType::kTH2F, {{nBinsPt, -15, 15}, {nBins, -5, 5}}});
-    */
 
     // process jet qa
     mHistManager.add("genMCjetPt", "MC inclusive gen jetPt ; p_{T} (GeV/#it{c})", HistType::kTH1F, {{nBinsPt, 0, 100}});
@@ -282,34 +350,49 @@ struct mcJetTrackCollisionQa {
     mHistManager.add("selectedTrackPhi", "selected collission tracks #phi ; #phi ", HistType::kTH1F, {{nBinsPhi, 0, 6.4}});
     mHistManager.add("selectedTrackEta", "selected collission tracks #eta ; #eta ", HistType::kTH1F, {{nBinsEta, -0.9, 0.9}});
     // 2D for reco vs. truth level - we want this for jets too, but first we need proper matching there !
-    /*
     mHistManager.add("trackMatchPt","MC reco vs truth; MC truth p_{T} (GeV/#it{c}); MC reco p_{T} (GeV/#it{c})", {HistType::kTH2F, {{nBinsPt, 0, 20}, {nBinsPt, 0, 20}}});
     mHistManager.add("trackMatchEta","MC reco vs truth; MC truth #eta; MC reco  #eta", {HistType::kTH2F, {{nBinsPt, -0.9, 0.9}, {nBins, -0.9, 0.9}}});
     mHistManager.add("trackMatchPhi","MC reco vs truth; MC truth #phi; MC reco #phi", {HistType::kTH2F, {{nBinsPt, 0, 6.32}, {nBins, 0, 6.32}}});
-
     // 2D for 'relative resolution figure'
     mHistManager.add("trackResolutionPt","Track reso #Delta p_{T} = (MC reco - MC truth)/ MC truth; MC truth p_{T} (GeV/#it{c}); #Delta p_{T}", {HistType::kTH2F, {{nBinsPt, 0, 20}, {nBins, -3, 3}}});
     mHistManager.add("trackResolutionEta","Track reso #Delta #eta = (MC reco - MC truth)/ MC truth; MC truth #Delta #eta", {HistType::kTH2F, {{nBinsPt, -0.9, 0.9}, {nBins, -1, 1}}});
     mHistManager.add("trackResolutionPhi","Track reso #Delta #phi = (MC reco - MC truth)/ MC truth; MC truth #phi (GeV/#it{c}); #Delta #phi", {HistType::kTH2F, {{nBinsPt, 0, 6.32}, {nBins, -5, 5}}});
-    */
   }
 
+  // fill collision qa histograms
+  template <class mcCollisions>
+  void fillMcCollisionHistos(mcCollisions const& collision)
+  {
+    mHistManager.fill(HIST("genMCcollisionVtxZ"), collision.mcCollision().posZ());
+    mHistManager.fill(HIST("recMCcollisionVtxZ"), collision.posZ());
+    mHistManager.fill(HIST("collMatchPosZ"), collision.mcCollision().posZ(), collision.posZ());
+    // 2D for 'relative resolution figure'
+    mHistManager.fill(HIST("collResolutionPt"), collision.mcCollision().posZ(), (collision.posZ() - collision.mcCollision().posZ())/collision.mcCollision().posZ());
+  }// end of collision template
+
   // fill qa histograms for selected tracks in collision - bool for if .has_mcCollision()
-  template <class TMyTracks> 
-  void fillMcTrackHistos(TMyTracks const& mct, bool mc)//could give collision as argument for additional association
+  template <class ValidationTracks> 
+  void fillMcTrackHistos(ValidationTracks const& mct, bool mc)//could give collision as argument for additional association
   {  
     for (const auto& track : mct) {
-      //if (!validationTracks.IsSelected(track)) {//with this in place all tracks are skipped !!! 
-      //  return;
-      //}
+      if (!selectTrack(track, trackSelection)) {
+        return;
+      }
       if(mc == true){
         if(track.has_mcParticle()){
           auto mcParticle =  track.mcParticle();//t.mcParticle_as<aod::McParticles>();
           mHistManager.fill(HIST("genMCselectedTrackPt"), mcParticle.pt());
           mHistManager.fill(HIST("genMCselectedTrackPhi"), mcParticle.phi());
           mHistManager.fill(HIST("genMCselectedTrackEta"), mcParticle.eta());
-
-        }
+          // 2D reco vs. gen
+          mHistManager.fill(HIST("trackMatchPt"), mcParticle.pt(), track.pt());
+          mHistManager.fill(HIST("trackMatchEta"), mcParticle.eta(), track.eta());
+          mHistManager.fill(HIST("trackMatchPhi"), mcParticle.phi(), track.phi());
+          // 2D for 'relative resolution figure'
+          mHistManager.fill(HIST("trackResolutionPt"), mcParticle.pt(), (track.pt() - mcParticle.pt())/mcParticle.pt());
+          mHistManager.fill(HIST("trackResolutionEta"),mcParticle.eta(), (track.eta() - mcParticle.eta())/mcParticle.eta());
+          mHistManager.fill(HIST("trackResolutionPhi"), mcParticle.phi(), (track.phi() - mcParticle.phi())/mcParticle.phi());
+        }// end of track.has_mcParticle
         // fill histos for all reconstructed particles from mc associated collision (includes mcParticles)
         mHistManager.fill(HIST("recMCselectedTrackPt"), track.pt());
         mHistManager.fill(HIST("recMCselectedTrackPhi"), track.phi());
@@ -347,82 +430,13 @@ struct mcJetTrackCollisionQa {
     mHistManager.fill(HIST("recMCjetConstTrackEta"), mcdJConst.eta());
   }// end of mcDetJetConstituent template
 
-  void processMcRun3(soa::Join<aod::Collisions, aod::McCollisionLabels>::iterator const& collision, 
-                      soa::Join<aod::FullMCParticleLevelJets, aod::FullMCParticleLevelJetConstituents> const& mcPartJets, 
-                      soa::Join<aod::FullMCDetectorLevelJets, aod::FullMCDetectorLevelJetConstituents> const& mcDetJets, 
-                      aod::McParticles const& mcParticles, aod::McCollisions const& mcCollisions,
-                      MCTracksRun3JE const& tracks)
+  template <typename particleJetConstituent>
+  void fillMcPartJetConstituents(particleJetConstituent const& mcpJConst)
   {
-    // we need jet Qa & jetConstituent QA
-    // loop over particle jets - fillParticleLevel
-    // loop over detector jets - fillDetectorLevel
-    // loop over matched jets (requires mtching and additional tables in process function) 
-    //see https://github.com/bhofman/AliPhysics/blob/721d787f96746f81a8b74238c6a6eb5cef8c1592/PWGJE/EMCALJetTasks/AliAnalysisTaskPWGJEQA.cxx#L1379
-    // look at matching https://github.com/AliceO2Group/O2Physics/blob/723d78931b446e7b5f6e0673c0345fcef584e796/Tutorials/src/mcHistograms.cxx#L154
-
-    // and then we do the track (and mc particle) Qa for the event on collision base
-    // To Do: qa histograms for mc particles in collision 
-    // https://github.com/AliceO2Group/O2Physics/blob/cd24862b6ad4d884fe9ec95dbc685d7c75a8a142/Tutorials/src/mcHistograms.cxx#L78
-    if (abs(collision.posZ()) > 10) {//sel8 for run3: !collision.sel8() -> only on run3 data with EvSels in process function !
-      return;
-    }
-    mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
-    if(collision.has_mcCollision()){
-      mHistManager.fill(HIST("genMCcollisionVtxZ"), collision.mcCollision().posZ());
-      mHistManager.fill(HIST("recMCcollisionVtxZ"), collision.posZ());
-      //differences at function of mcTruth
-      /*
-      mHistManager.fill(HIST("collkMatchPosZ"), collision.mcCollision().posZ(), collision.posZ());
-      // 2D for 'relative resolution figure'
-      mHistManager.fill(HIST("collResolutionPt"_, collision.mcCollision().posZ(), (collision.posZ() - collision.mcCollision().posZ())/collision.mcCollision().posZ());
-      */
-      fillMcTrackHistos(tracks, true);
-    } // end of loop if mc collision
-    fillMcTrackHistos(tracks, false);
-
-    // loop over mc detector level jets for cross check
-    for(const auto& detJet : mcDetJets){
-      fillMcDetJets(detJet);
-      for (auto& detConst : detJet.tracks_as<MCTracksRun3JE>()) {// had problems to pass the correct arguments into template
-        fillMcDetJetConstituents(detConst);
-      }// end of loop detector level constituents
-    }// end of loop detector level jets
-
-    for(const auto& genJet : mcPartJets ){// or we put here the det - or / gen as additional set of plots - maybe we still need the matching first ?
-      fillMcPartJets(genJet);
-        //make differences in TH2F's
-
-        //ask for this - mcparticleleveljets should point to mcparticles -> how to access ?
-        
-        for (auto& mcParticle : genJet.tracks_as<aod::McParticles>()) {
-        //for (auto& genConst : genJet.track()) {
-          //if(genConst.has_mcParticle()){
-            //auto mcParticle = genConst.mcParticle_as<aod::McParticles>();
-            //auto mcParticle = genConst.mcParticle();
-            mHistManager.fill(HIST("genMCjetConstTrackPt"), mcParticle.pt());
-            mHistManager.fill(HIST("genMCjetConstTrackPhi"), mcParticle.phi());
-            mHistManager.fill(HIST("genMCjetConstTrackEta"), mcParticle.eta());
-            // here we could add reso and eff by mcParticle.pt()- t.pt() as function of mcParticle = truth
-            // and Th2F's with both
-          //}
-        } // end of jet constituent loop 
-         
-        for(const auto& detJet : mcDetJets){
-          mHistManager.fill(HIST("genRecMCjetPt"), detJet.pt());
-          mHistManager.fill(HIST("genRecMCjetPhi"), detJet.phi());
-          mHistManager.fill(HIST("genRecMCjetEta"), detJet.eta());
-          for (auto& detConst : detJet.tracks_as<MCTracksRun3JE>()) {// this works, but empty for now..
-            mHistManager.fill(HIST("genRecMCjetConstTrackPt"), detConst.pt());
-            mHistManager.fill(HIST("genRecMCjetConstTrackPhi"), detConst.phi());
-            mHistManager.fill(HIST("genRecMCjetConstTrackEta"), detConst.eta());
-          } // end of loop detector level constituents
-        } // end of loop detector level (in particle level) jet constituents 
-      } // end of loop particle level jets 
-
-
-
-  } // end process
-  PROCESS_SWITCH(mcJetTrackCollisionQa, processMcRun3, "validate jet-finder output on run3 mc AOD's", false);
+    mHistManager.fill(HIST("genMCjetConstTrackPt"), mcpJConst.pt());
+    mHistManager.fill(HIST("genMCjetConstTrackPhi"), mcpJConst.phi());
+    mHistManager.fill(HIST("genMCjetConstTrackEta"), mcpJConst.eta());
+  }// end of mcPartJetConstituent template
 
   void processMcRun2(soa::Join<aod::Collisions, aod::McCollisionLabels>::iterator const& collision, 
                       soa::Join<aod::FullMCParticleLevelJets, aod::FullMCParticleLevelJetConstituents> const& mcPartJets, 
@@ -435,25 +449,58 @@ struct mcJetTrackCollisionQa {
     }
     mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
     if(collision.has_mcCollision()){
-      mHistManager.fill(HIST("genMCcollisionVtxZ"), collision.mcCollision().posZ());
-      mHistManager.fill(HIST("recMCcollisionVtxZ"), collision.posZ());
+      fillMcCollisionHistos(collision);
       fillMcTrackHistos(tracks, true);
     } // end if has mc collision
     fillMcTrackHistos(tracks, false);
 
     for(const auto& detJet : mcDetJets){
       fillMcDetJets(detJet);
-      for (auto& detConst : detJet.tracks_as<MCTracksRun2JE>()) {// had problems to pass the correct arguments into template
+      for (auto& detConst : detJet.tracks_as<MCTracksRun2JE>()) {
         fillMcDetJetConstituents(detConst);
       }// end of loop detector level constituents
     }// end of loop detector level jets
 
-    for(const auto& genJet : mcPartJets){
+    for(const auto& genJet : mcPartJets ){
       fillMcPartJets(genJet);
-      // and here we have a problem for the constituents!
-    }//end of loop particle level jets
-  } // end process
+      for (auto& mcParticle : genJet.tracks_as<aod::McParticles>()) {
+        fillMcPartJetConstituents(mcParticle);
+      } // end of jet constituent loop 
+    } // end of loop particle level jets 
+  } // end processMcRun2
   PROCESS_SWITCH(mcJetTrackCollisionQa, processMcRun2, "validate jet-finder output on converted run2 mc AOD's", false);
+
+  void processMcRun3(soa::Join<aod::Collisions, aod::McCollisionLabels>::iterator const& collision, 
+                      soa::Join<aod::FullMCParticleLevelJets, aod::FullMCParticleLevelJetConstituents> const& mcPartJets, 
+                      soa::Join<aod::FullMCDetectorLevelJets, aod::FullMCDetectorLevelJetConstituents> const& mcDetJets, 
+                      aod::McParticles const& mcParticles, aod::McCollisions const& mcCollisions,
+                      MCTracksRun3JE const& tracks)
+  { 
+    if (abs(collision.posZ()) > 10) {//sel8 for run3: !collision.sel8() -> only on run3 data with EvSels in process function !
+      return;
+    }
+    mHistManager.fill(HIST("collisionVtxZ"), collision.posZ());
+    if(collision.has_mcCollision()){
+      fillMcCollisionHistos(collision);
+      fillMcTrackHistos(tracks, true);
+    } // end of loop if mc collision
+    fillMcTrackHistos(tracks, false);
+
+    for(const auto& detJet : mcDetJets){
+      fillMcDetJets(detJet);
+      for (auto& detConst : detJet.tracks_as<MCTracksRun3JE>()) {
+        fillMcDetJetConstituents(detConst);
+      }// end of loop detector level constituents
+    }// end of loop detector level jets
+
+    for(const auto& genJet : mcPartJets ){
+      fillMcPartJets(genJet);
+      for (auto& mcParticle : genJet.tracks_as<aod::McParticles>()) {
+        fillMcPartJetConstituents(mcParticle);
+      } // end of jet constituent loop 
+    } // end of loop particle level jets 
+  } // end processMcRun3
+  PROCESS_SWITCH(mcJetTrackCollisionQa, processMcRun3, "validate jet-finder output on run3 mc AOD's", false);
 
   // dummy process to run jetfinder validation code on AO2D's, but MC validation for run3 on hyperloop
   void processDummy(aod::Collisions const& collision)
