@@ -27,15 +27,20 @@
   //============== 1)template in mcJetTrackCollisionQa to validate JetMatching !
   // look at matching https://github.com/AliceO2Group/O2Physics/blob/723d78931b446e7b5f6e0673c0345fcef584e796/Tutorials/src/mcHistograms.cxx#L154
   // loop over matched jets
-  // make additional TH2F's for matched jets in pt, phi, eta (similarly to the ones for tracks/collisions)
+  // make additional TH2F's for matched jets in pt, phi, eta (just what i did for the ones for tracks and collisions)
   //        i) with mcrec vs mcpart 
   //        ii)with (mcrec-mcpart)/mcpart as function of mcpart
   //
-  //============== 2) add logarithmic x-axis for pt plots - also in AliPhysics !
+  //============== 2) Add processes for:
+  //                i) processRun3AOD, process ESD: Full (doesn't work yet) and Neutral Jets
+  //                ii)processMcRun3, processMcRun2: Full (doesn't work yet) and Neutral Jets
+  //
+  //============== 3) prepare plotting macros for Run3 and MCrun2, MCrun3 !
+  //
+  //============== 4) add logarithmic x-axis for pt plots and improve overall binning via arrays - also in AliPhysics !
   // look here https://github.com/AliceO2Group/QualityControl/blob/17798501ac1cbc9a9f25797ed15c68244c0a36f0/Modules/MUON/MCH/src/RofsTask.cxx#L58
   //
   //============== 3) add explicit filters for collision and tracks (?)
-  //
   ////////////////=============================================////////////////
 
 #include "Framework/runDataProcessing.h"
@@ -410,8 +415,8 @@ struct mcJetTrackCollisionQa {
   void fillMcDetJets(detectorJet const& mcdJet)
   { 
     mHistManager.fill(HIST("recMCjetPt"), mcdJet.pt());
-    mHistManager.fill(HIST("recMCjetPhi"), mcdJet.eta());
-    mHistManager.fill(HIST("recMCjetEta"), mcdJet.phi());
+    mHistManager.fill(HIST("recMCjetPhi"), mcdJet.phi());
+    mHistManager.fill(HIST("recMCjetEta"), mcdJet.eta());
   }// end of mcDetJet template
 
   template <typename particleJet>
@@ -439,8 +444,8 @@ struct mcJetTrackCollisionQa {
   }// end of mcPartJetConstituent template
 
   void processMcRun2(soa::Join<aod::Collisions, aod::McCollisionLabels>::iterator const& collision, 
-                      soa::Join<aod::FullMCParticleLevelJets, aod::FullMCParticleLevelJetConstituents> const& mcPartJets, 
-                      soa::Join<aod::FullMCDetectorLevelJets, aod::FullMCDetectorLevelJetConstituents> const& mcDetJets, 
+                      soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents> const& mcPartJets, 
+                      soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents> const& mcDetJets, 
                       aod::McParticles const& mcParticles, aod::McCollisions const& mcCollisions,
                       MCTracksRun2JE const& tracks)
   {
@@ -471,8 +476,8 @@ struct mcJetTrackCollisionQa {
   PROCESS_SWITCH(mcJetTrackCollisionQa, processMcRun2, "validate jet-finder output on converted run2 mc AOD's", false);
 
   void processMcRun3(soa::Join<aod::Collisions, aod::McCollisionLabels>::iterator const& collision, 
-                      soa::Join<aod::FullMCParticleLevelJets, aod::FullMCParticleLevelJetConstituents> const& mcPartJets, 
-                      soa::Join<aod::FullMCDetectorLevelJets, aod::FullMCDetectorLevelJetConstituents> const& mcDetJets, 
+                      soa::Join<aod::ChargedMCParticleLevelJets, aod::ChargedMCParticleLevelJetConstituents> const& mcPartJets, 
+                      soa::Join<aod::ChargedMCDetectorLevelJets, aod::ChargedMCDetectorLevelJetConstituents> const& mcDetJets, 
                       aod::McParticles const& mcParticles, aod::McCollisions const& mcCollisions,
                       MCTracksRun3JE const& tracks)
   { 

@@ -223,8 +223,8 @@
         "DoTriggering": "false",
         "DoRhoAreaSub": "false",
         "DoConstSub": "false",
-        "processDummy": "true",
-        "processChargedJets": "false",
+        "processDummy": "false",
+        "processChargedJets": "true",
         "processNeutralJets": "false",
         "processFullJets": "false",
         "processParticleLevelJets": "false"
@@ -340,11 +340,11 @@
         "DoTriggering": "false",
         "DoRhoAreaSub": "false",
         "DoConstSub": "false",
-        "processDummy": "true",
+        "processDummy": "false",
         "processChargedJets": "false",
         "processNeutralJets": "false",
         "processFullJets": "false",
-        "processParticleLevelJets": "false"
+        "processParticleLevelJets": "true"
     },
     "jet-finder-mcp-full": {
         "vertexZCut": "10",
@@ -379,11 +379,11 @@
         "DoTriggering": "false",
         "DoRhoAreaSub": "false",
         "DoConstSub": "false",
-        "processDummy": "false",
+        "processDummy": "true",
         "processChargedJets": "false",
         "processNeutralJets": "false",
         "processFullJets": "false",
-        "processParticleLevelJets": "true"
+        "processParticleLevelJets": "false"
     },
     "jet-finder-mcp-neutral": {
         "vertexZCut": "10",
