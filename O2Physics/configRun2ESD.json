@@ -37,8 +37,8 @@
         "itsMatching": "0",
         "ptMin": "0.150000006",
         "ptMax": "1e+10",
-        "etaMin": "-0.899999976",
-        "etaMax": "0.899999976"
+        "etaMin": "-0.9",
+        "etaMax": "0.9"
     },
     "event-selection-task": {
         "syst": "pp",
@@ -52,8 +52,8 @@
         "vertexZCut": "10",
         "trackPtMin": "0.150000006",
         "trackPtMax": "1000",
-        "trackEtaMin": "-0.800000012",
-        "trackEtaMax": "0.800000012",
+        "trackEtaMin": "-0.9",
+        "trackEtaMax": "0.9",
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "hybridTracksJE",
