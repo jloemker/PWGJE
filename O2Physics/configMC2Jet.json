@@ -69,9 +69,9 @@
         "exoticCellInCrossMinAmplitude": "0.100000001",
         "useWeightExotic": "false",
         "isMC": "true",
-        "processFull": "true",
+        "processFull": "false",
         "processMCFull": "false",
-        "processStandalone": "false"
+        "processStandalone": "true"
     },
     "jet-finder-data-charged": {
         "vertexZCut": "10",
