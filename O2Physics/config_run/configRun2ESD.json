@@ -35,10 +35,11 @@
         "produceFBextendedTable": "false",
         "compatibilityIU": "false",
         "itsMatching": "0",
+        "dcaSetup": "0",
         "ptMin": "0.100000001",
         "ptMax": "1e+10",
-        "etaMin": "-0.800000012",
-        "etaMax": "0.800000012"
+        "etaMin": "-0.9000000",
+        "etaMax": "0.9000000"
     },
     "event-selection-task": {
         "syst": "PbPb",
@@ -52,11 +53,12 @@
         "vertexZCut": "10",
         "trackPtMin": "0.150000006",
         "trackPtMax": "1000",
-        "trackEtaMin": "-0.9",
-        "trackEtaMax": "0.9",
+        "trackEtaMin": "-0.899999976",
+        "trackEtaMax": "0.899999976",
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "hybridTracksJE",
+        "evSel": "evSel7",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.9",
         "clusterEtaMax": "0.9",
@@ -96,6 +98,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -135,6 +138,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -174,6 +178,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -213,6 +218,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -252,6 +258,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -291,6 +298,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -330,6 +338,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -369,6 +378,7 @@
         "trackPhiMin": "-999",
         "trackPhiMax": "999",
         "trackSelections": "globalTracks",
+        "evSel": "evSel8",
         "clusterDefinition": "kV3Default",
         "clusterEtaMin": "-0.699999988",
         "clusterEtaMax": "0.699999988",
@@ -404,6 +414,7 @@
         "ptUp": "9.9999998e+10",
         "etaLow": "-0.899999976",
         "etaUp": "0.899999976",
+        "evSel": "true",
         "nBins": "200",
         "BinsPhi": {
             "values": [
@@ -422,8 +433,8 @@
         "BinsPt": {
             "values": [
                 "200",
-		"0",
-		"100"
+                "0",
+                "100"
             ]
         },
         "trackSelections": "hybridTracksJE",
@@ -432,6 +443,10 @@
         "processDummy": "false"
     },
     "mc-jet-validation-track-collision-qa": {
+        "ptLow": "0.150000006",
+        "ptUp": "9.9999998e+10",
+        "etaLow": "-0.899999976",
+        "etaUp": "0.899999976",
         "nBins": "200",
         "BinsPhi": {
             "values": [
